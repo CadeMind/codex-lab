@@ -35,7 +35,7 @@ def parse_imports(file_path: Path) -> Set[str]:
 
 
 def build_import_tree(py_files: Iterable[Path], root: Path) -> Dict[str, Set[str]]:
-@@ -64,76 +65,86 @@ def collect_local_modules(py_files: Iterable[Path], root: Path) -> Set[str]:
+def collect_local_modules(py_files: Iterable[Path], root: Path) -> Set[str]:
 
 def is_local(module: str, local_modules: Set[str]) -> bool:
     """Return ``True`` if *module* belongs to the project."""
