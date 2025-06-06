@@ -6,7 +6,7 @@ import ast
 from collections import defaultdict
 from pathlib import Path
 import argparse
-from typing import Dict, Iterable, List, Mapping
+from typing import DefaultDict, Dict, Iterable, List, Mapping
 
 
 def find_py_files(root: Path) -> List[Path]:
@@ -15,18 +15,31 @@ def find_py_files(root: Path) -> List[Path]:
 
 
 def parse_imports(file_path: Path) -> Dict[str, List[str | None]]:
-    """Parse *file_path* and return a mapping of modules to imported names."""
-    imports: Dict[str, List[str | None]] = defaultdict(list)
+    """Parse *file_path* and return a mapping of modules to imported names.
+
+    ``None`` entries represent ``import <module>`` statements, while strings
+    contain imported names and optional aliases.
+    """
+    imports: DefaultDict[str, List[str | None]] = defaultdict(list)
+
     with file_path.open("r", encoding="utf-8") as f:
         tree = ast.parse(f.read(), filename=str(file_path))
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                imports[alias.name].append(None)
+                if alias.asname:
+                    imports[alias.name].append(f"as {alias.asname}")
+                else:
+                    imports[alias.name].append(None)
         elif isinstance(node, ast.ImportFrom):
-            module = node.module or ''
+            module = "." * node.level + (node.module or "")
             for alias in node.names:
-                imports[module].append(alias.name)
+                name = alias.name
+                if alias.asname:
+                    name += f" as {alias.asname}"
+                imports[module].append(name)
+
     return imports
 
 
@@ -53,25 +66,34 @@ def format_markdown(tree: Mapping[str, Mapping[str, List[str | None]]]) -> str:
             lines.append("  - (no imports)")
             continue
         for module, names in sorted(imports.items()):
-            if module and any(names):
-                lines.append(f"  - `{module}`:")
-            elif module:
-                lines.append(f"  - `import {module}`")
-                continue
-            else:
-                module = ""
-            for name in names:
-                if name:
-                    lines.append(f"    - {name}")
-                else:
+            import_items = [n for n in names if n is None or str(n).startswith("as ")]
+            from_items = [n for n in names if n not in import_items]
+
+            for item in import_items:
+                if item is None:
                     lines.append(f"  - `import {module}`")
+                else:
+                    alias = str(item)[3:]
+                    lines.append(f"  - `import {module} as {alias}`")
+
+            if from_items:
+                lines.append(f"  - `{module}`:")
+                for name in from_items:
+                    lines.append(f"    - {name}")
     return "\n".join(lines)
 
 
 def main(argv: Iterable[str] | None = None) -> None:
     """Entry point for command line execution."""
-    parser = argparse.ArgumentParser(description="Build a Markdown map of imports")
-    parser.add_argument("path", nargs="?", default=".", help="Root directory to scan")
+    parser = argparse.ArgumentParser(
+        description="Build a Markdown map of imports"
+    )
+    parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Root directory to scan",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     root = Path(args.path).resolve()
