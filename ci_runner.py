@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--update-readme", action="store_true", help="Update README.md")
     parser.add_argument("--gh-pages", action="store_true", help="Prepare GitHub Pages artifact")
     parser.add_argument("--badge", action="store_true", help="Generate SVG badges")
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    args = parser.parse_args(argv if argv is not None else None)
 
     root = Path(args.path).resolve()
     report_dir = root / "codex_report"
