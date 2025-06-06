@@ -6,7 +6,6 @@ import ast
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
-
 def llm_generate_doc(code: str) -> str:
     """Return generated documentation for *code* via LLM stub."""
     # Placeholder for integration with real LLM service.
@@ -85,7 +84,7 @@ def parse_file(path: Path) -> List[Tuple[str, str]]:
     return docs
 
 
-def format_markdown(file_path: Path, items: List[Tuple[str, str]]) -> str:
+def format_markdown(file_path: Path, items: List[Tuple[str, str]]) -> str: 
     """Return Markdown documentation for *file_path*."""
     lines = [f"# {file_path.name}", ""]
     for header, doc in items:
@@ -111,14 +110,14 @@ def format_pyi(items: List[Tuple[str, str]]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: Iterable[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Generate simple docs via AST")
     parser.add_argument("--path", default=".", help="Directory to scan")
     parser.add_argument("--output", default="./docs/", help="Output directory")
     parser.add_argument(
         "--format", choices=["markdown", "pyi"], default="markdown", help="Output format"
     )
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    args = parser.parse_args(argv if argv is not None else None)
 
     root = Path(args.path).resolve()
     out_dir = Path(args.output)
