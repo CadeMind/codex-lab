@@ -22,8 +22,13 @@ def parse_imports(file_path: Path) -> Dict[str, List[str | None]]:
     """
     imports: DefaultDict[str, List[str | None]] = defaultdict(list)
 
-    with file_path.open("r", encoding="utf-8") as f:
-        tree = ast.parse(f.read(), filename=str(file_path))
+    # 🔧 Устойчивое чтение файла с fallback:
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        content = file_path.read_text(encoding="latin-1")
+
+    tree = ast.parse(content, filename=str(file_path))
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
