@@ -74,7 +74,7 @@ def format_markdown(issues):
     return "\n".join(lines)
 
 
-def main():
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Scan project for TODO comments.")
     parser.add_argument("--path", default=".", help="directory to scan")
     parser.add_argument(
@@ -82,7 +82,7 @@ def main():
         default="todos.md",
         help="output file path (use .json extension for JSON)",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv if argv is not None else None)
 
     issues = scan_dir(args.path)
 
