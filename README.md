@@ -19,3 +19,7 @@ Run `project_doc_gen.py` to generate a Markdown file summarizing imports.
 ```bash
 python project_doc_gen.py --output project_structure.md
 ```
+
+## Contribution Guidelines
+
+For detailed instructions on adding new CLI modules and integrating them with `project_map.py`, see [CONTRIBUTING.md](CONTRIBUTING.md).
