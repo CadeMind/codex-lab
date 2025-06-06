@@ -6,7 +6,7 @@ import argparse
 import importlib
 import sys
 from pathlib import Path
-from typing import Iterable
+
 
 
 def call_module(module_name: str, args: list[str]) -> None:
@@ -32,17 +32,26 @@ def call_module(module_name: str, args: list[str]) -> None:
     module.main(args)
 
 
-def main(argv: Iterable[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Project helper CLI")
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["doc", "graph", "stats"],
+        choices=[
+            "doc",
+            "graph",
+            "stats",
+            "html",
+            "readme",
+            "todo",
+            "ai-doc",
+            "ci",
+        ],
         help="Operation mode",
     )
     parser.add_argument("--path", default=".", help="Project directory")
     parser.add_argument("--output", help="Optional output file")
-    parsed = parser.parse_args(list(argv) if argv is not None else None)
+    parsed = parser.parse_args(argv if argv is not None else None)
 
     root = Path(parsed.path).resolve()
 
@@ -56,11 +65,36 @@ def main(argv: Iterable[str] | None = None) -> None:
         if parsed.output:
             args += ["--output", parsed.output]
         call_module("import_graph_builder", args)
-    else:  # stats
+    elif parsed.mode == "stats":
         args = ["--path", str(root)]
         if parsed.output:
             args += ["--output", parsed.output]
         call_module("code_stats", args)
+    elif parsed.mode == "html":
+        args = ["--path", str(root)]
+        if parsed.output:
+            args += ["--output", parsed.output]
+        call_module("html_reporter", args)
+    elif parsed.mode == "readme":
+        args = ["--path", str(root)]
+        if parsed.output:
+            args += ["--output", parsed.output]
+        call_module("readme_gen", args)
+    elif parsed.mode == "todo":
+        args = ["--path", str(root)]
+        if parsed.output:
+            args += ["--output", parsed.output]
+        call_module("todo_scanner", args)
+    elif parsed.mode == "ai-doc":
+        args = ["--path", str(root)]
+        if parsed.output:
+            args += ["--output", parsed.output]
+        call_module("ai_docgen", args)
+    else:  # ci
+        args = ["--path", str(root)]
+        if parsed.output:
+            args += ["--output", parsed.output]
+        call_module("ci_runner", args)
 
 
 if __name__ == "__main__":
