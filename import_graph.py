@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Set
 
 from graphviz import Digraph
+from pyvis.network import Network
 
 
 def find_py_files(root: Path) -> List[Path]:
@@ -34,33 +35,7 @@ def parse_imports(file_path: Path) -> Set[str]:
 
 
 def build_import_tree(py_files: Iterable[Path], root: Path) -> Dict[str, Set[str]]:
-    """Build a mapping of relative file paths to imported modules."""
-    tree: Dict[str, Set[str]] = {}
-    for path in py_files:
-        relative = str(path.relative_to(root))
-        tree[relative] = parse_imports(path)
-    return tree
-
-
-def module_name_from_path(path: Path) -> str:
-    """Convert *path* to a dotted module name relative to project root."""
-    parts = list(path.with_suffix("").parts)
-    return ".".join(parts)
-
-
-def collect_local_modules(py_files: Iterable[Path], root: Path) -> Set[str]:
-    """Return a set of possible local module names for the project."""
-    modules: Set[str] = set()
-    for f in py_files:
-        rel = f.relative_to(root)
-        mod = module_name_from_path(rel)
-        parts = mod.split(".")
-        for i in range(1, len(parts) + 1):
-            modules.add(".".join(parts[:i]))
-        if rel.name == "__init__.py" and parts:
-            modules.add(".".join(parts[:-1]))
-    return modules
-
+@@ -64,76 +65,86 @@ def collect_local_modules(py_files: Iterable[Path], root: Path) -> Set[str]:
 
 def is_local(module: str, local_modules: Set[str]) -> bool:
     """Return ``True`` if *module* belongs to the project."""
@@ -86,6 +61,11 @@ def main(argv: Iterable[str] | None = None) -> None:
         default="import_graph.png",
         help="Output PNG file",
     )
+    parser.add_argument(
+        "--html",
+        default="import_graph.html",
+        help="Output HTML file for interactive graph",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     root = Path(".").resolve()
@@ -94,6 +74,7 @@ def main(argv: Iterable[str] | None = None) -> None:
     local_modules = collect_local_modules(py_files, root)
 
     dot = Digraph("import_graph", format="png")
+    net = Network(height="750px", width="100%", directed=True)
 
     added_nodes: Set[str] = set()
 
@@ -106,6 +87,7 @@ def main(argv: Iterable[str] | None = None) -> None:
                 style="filled",
                 color="lightblue",
             )
+            net.add_node(file_path, label=file_path, shape="box", color="lightblue")
             added_nodes.add(file_path)
 
         for module in sorted(imports):
@@ -123,16 +105,19 @@ def main(argv: Iterable[str] | None = None) -> None:
                     style="filled",
                     color=color,
                 )
+                net.add_node(module, label=module, shape="ellipse", color=color)
                 added_nodes.add(module)
 
             dot.edge(file_path, module)
+            net.add_edge(file_path, module)
 
     output_file = Path(args.output)
     dot.render(
         output_file.stem,
-        directory=str(output_file.parent) if output_file.parent != Path('') else None,
+        directory=str(output_file.parent) if output_file.parent != Path("") else None,
         cleanup=True,
     )
+    net.write_html(args.html)
 
 
 if __name__ == "__main__":
