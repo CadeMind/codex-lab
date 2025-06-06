@@ -130,13 +130,13 @@ def build_html(data: Dict[str, object], img_src: str | None) -> str:
     return "\n".join(html)
 
 
-def main(argv: Iterable[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Generate HTML project report")
     parser.add_argument("--path", default=".", help="Project directory")
     parser.add_argument(
         "--output", default="report.html", help="Output HTML file"
     )
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    args = parser.parse_args(argv if argv is not None else None)
 
     root = Path(args.path).resolve()
     data = gather_statistics(root)
