@@ -62,13 +62,13 @@ def build_description(root: Path) -> str:
     return "This project " + ", ".join(parts) + "."
 
 
-def main(argv: Iterable[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Generate README.md")
     parser.add_argument("--path", default=".", help="Project directory")
     parser.add_argument(
         "--output", default="README.md", help="Output README file"
     )
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    args = parser.parse_args(argv if argv is not None else None)
 
     root = Path(args.path).resolve()
     py_files = find_py_files(root)
